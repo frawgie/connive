@@ -29,7 +29,24 @@ class Env(dict):
 def add_globals(env):
     import math, operator as op
     env.update({
-        '+': (lambda *args: reduce(op.add, args))})
+        '+': (lambda *args: reduce(op.add, args)),
+        '-': (lambda *args: reduce(op.sub, args)),
+        '*': (lambda *args: reduce(op.mul, args)),
+        '/': (lambda *args: reduce(op.div, args)),
+        'not': op.not_,
+        '>': op.gt,
+        '<': op.lt,
+        '>=': op.ge,
+        '<=': op.le,
+        'equal': op.eq,
+        'eq': op.is_,
+        'length': len,
+        'cons': (lambda x, y: [x] + [y]),
+        'car': (lambda x: x[0]),
+        'cdr': (lambda x: x[1]),
+        'append': (lambda x, y: x + [y]),
+        'list': (lambda *x: list(x))
+        })
     return env
 global_env = add_globals(Env())
 
@@ -46,6 +63,9 @@ def eval(expr, env=global_env):
         return eval_lambda(expr, env)
     elif is_quote(expr):
         return eval_quote(expr)
+    elif is_if(expr):
+        (_, predicate, consequent, alternative) = expr
+        return eval((consequent if eval(predicate, env) else alternative), env)
     elif is_application(expr):
         expr.pop(0)
         exps = [eval(exp, env) for exp in expr]
@@ -62,7 +82,6 @@ def eval_assignment(expr, env):
 
 def eval_definition(expr, env):
     (_, var, val) = expr
-    # FIXME: This is not quite right.
     env[var] = eval(val, env)
 
 def eval_lambda(expr, env):
@@ -94,6 +113,9 @@ def is_definition(expression):
 
 def is_application(expression):
     return is_form(expression, "apply")
+
+def is_if(expression):
+    return is_form(expression, "if")
 
 def is_lambda(expression):
     return is_form(expression, "lambda")
