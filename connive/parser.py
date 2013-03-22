@@ -16,7 +16,6 @@ def transform(tokens):
         raise SyntaxError("Unexpected EOF")
 
     first_token = tokens.pop(0)
-    print first_token
     if first_token == '(':
         node = []
         while tokens[0] != ')':
@@ -31,7 +30,8 @@ def transform(tokens):
 
 
 def atom(token):
-    try:
-        return ast.literal_eval(token)
-    except ValueError:
-        return token
+    try: return int(token)
+    except ValueError: pass
+    try: return float(token)
+    except: pass
+    return token
